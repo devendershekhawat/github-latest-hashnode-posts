@@ -39,9 +39,13 @@ async function getLatestHashnodePosts(options) {
               node {
                 id
                 posts(first: $first) {
-                  id
-                  title
-                  slug
+                  edges {
+                    node {
+                      id
+                      title
+                      slug
+                    }
+                  }
                 }
               }
             }
