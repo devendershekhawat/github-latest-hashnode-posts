@@ -4143,13 +4143,17 @@ async function getLatestHashnodePosts(options) {
         me {
           id
           publications(first: 50) {
-            id
             edges {
               node {
-                posts(page: 0, perPage: ${maxPosts}) {
-                  id
-                  title
-                  slug
+                id
+                posts(first: $first) {
+                  edges {
+                    node {
+                      id
+                      title
+                      slug
+                    }
+                  }
                 }
               }
             }
