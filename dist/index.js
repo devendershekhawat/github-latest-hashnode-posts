@@ -4214,16 +4214,12 @@ async function replaceReadmePosts(posts, options) {
 		core.setFailed(`Couldn't find the ${closingComment} comment. Exiting!`);
 	}
 
-	// TODO: replace with a nice formatting
-	const content = JSON.stringify(posts, null, 2);
+	const content = formatPosts(posts);
 	const contentLines = content.split('\n');
 
 	// Add one since the content needs to be inserted just after the initial comment
 	startIdx++;
 	contentLines.forEach((line, idx) => readmeContent.splice(startIdx + idx, 0, line));
-
-	// Append <!--RECENT_ACTIVITY:end--> comment
-	readmeContent.splice(startIdx + contentLines.length, 0, closingComment);
 
 	// Update README
 	fs.writeFileSync(readmeFile, readmeContent.join('\n'));
@@ -4234,6 +4230,25 @@ async function replaceReadmePosts(posts, options) {
 	} catch (err) {
 		core.setFailed(err);
 	}
+}
+
+function formatPosts(posts) {
+	return `
+    <table>
+      ${posts.map((post) => {
+				return `
+        <tr>
+          <td><img src="${post.coverImage}" width="500" height="auto" /></td>
+          <td>
+            <sup>${post.dateAdded}</sup><br />
+            <b>${post.title}</b>
+            <p>${post.brief}</p>
+          </td>
+        </tr>
+        `;
+			})}
+    </table>
+  `;
 }
 
 /**
