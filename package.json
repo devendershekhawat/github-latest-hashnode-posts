@@ -1,7 +1,7 @@
 {
 	"name": "github-latest-hashnode-posts",
 	"version": "0.0.1",
-	"description": "Updates your README with the latest posts from your Hashnode user.",
+	"description": "Updates your README with the latest posts one of your Hashnode publications.",
 	"main": "src/index.js",
 	"scripts": {
 		"preinstall": "npx only-allow pnpm",

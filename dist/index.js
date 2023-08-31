@@ -4122,8 +4122,13 @@ const DEFAULT_COMMIT_MESSAGE = 'Update latest blog posts';
 const httpClient = new http.HttpClient('github-action-hashnode-posts');
 
 function getInputs() {
+	const publicationId = core.getInput('HASHNODE_PUBLICATION_ID');
+	if (!publicationId) {
+		core.setFailed('HASHNODE_PUBLICATION_ID is required');
+	}
+
 	return {
-		hashnodeAccessToken: core.getInput('HASHNODE_ACCESS_TOKEN'),
+		publicationId,
 		gitHubToken: core.getInput('GITHUB_TOKEN'),
 		readmeFile: core.getInput('README_FILE') || DEFAULT_README_FILE,
 		openingComment: core.getInput('OPENING_COMMENT') || DEFAULT_OPENING_COMMENT,
@@ -4134,41 +4139,38 @@ function getInputs() {
 }
 
 async function getLatestHashnodePosts(options) {
-	const { hashnodeAccessToken, maxPosts } = options;
+	const { publicationId, maxPosts } = options;
 	core.info(`Fetching latest ${maxPosts} posts from Hashnode...`);
 	const response = await httpClient.post(
 		HASHNODE_GQL_ENDPOINT,
 		JSON.stringify({
 			query: `#graphql
-      query LatestPosts($first: Int!) {
-        me {
-          id
-          publications(first: 50) {
-            edges {
-              node {
-                id
-                posts(first: $first) {
-                  edges {
-                    node {
-                      id
-                      title
-                      slug
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    `,
+				query LatestPosts($id: ObjectId!, $first: Int!) {
+					publication(id: $id) {
+						id
+						posts(first: $first) {
+							edges {
+								node {
+									id
+									title
+									brief
+									publishedAt
+									coverImage {
+										url
+									}
+								}
+							}
+						}
+					}
+				}
+			`,
 			variables: {
+				id: publicationId,
 				first: maxPosts,
 			},
 		}),
 		{
 			'Content-Type': 'application/json',
-			Authorization: hashnodeAccessToken,
 			'hn-trace-app': 'github-action-hashnode-posts',
 		},
 	);
@@ -4179,17 +4181,17 @@ async function getLatestHashnodePosts(options) {
 
 	const body = JSON.parse(await response.readBody());
 	const {
-		data: { me },
+		data: { publication },
 	} = body;
 
-	if (!me) {
-		throw new Error('No user found with the given access token');
+	if (!publication) {
+		core.setFailed(`Could not find a publication with the given id: ${publicationId}`);
 	}
 
 	core.debug('Latest posts fetched from Hashnode');
-	core.debug(JSON.stringify(me, null, 2));
+	core.debug(JSON.stringify(publication, null, 2));
 
-	const posts = me.publications.edges.flatMap((edge) => edge.node.posts.edges.map((edge) => edge.node));
+	const posts = publication.posts.edges.map((edge) => edge.node);
 
 	return posts;
 }
@@ -4199,32 +4201,26 @@ async function replaceReadmePosts(posts, options) {
 
 	let readmeContent;
 	try {
-		readmeContent = fs.readFileSync(readmeFile, 'utf-8').split('\n');
+		readmeContent = fs.readFileSync(readmeFile, 'utf-8');
 	} catch (err) {
+		core.error(err);
 		core.setFailed(`Couldn't find the file named ${readmeFile}. Exiting!`);
 	}
 
-	let startIdx = readmeContent.findIndex((content) => content.trim() === openingComment);
-	if (startIdx === -1) {
-		core.setFailed(`Couldn't find the ${openingComment} comment. Exiting!`);
-	}
+	assertCommentExists(openingComment, readmeContent);
+	assertCommentExists(closingComment, readmeContent);
 
-	const endIdx = readmeContent.findIndex((content) => content.trim() === closingComment);
-	if (endIdx === -1) {
-		core.setFailed(`Couldn't find the ${closingComment} comment. Exiting!`);
-	}
+	const formattedPosts = formatPosts(posts);
+	core.debug('Formatted posts');
+	core.debug(formattedPosts);
 
-	const content = formatPosts(posts);
-	const contentLines = content.split('\n');
+	const regex = new RegExp(`${openingComment}([\\s\\S]*?)${closingComment}`, 'g');
+	const newReadmeContent = readmeContent.replaceAll(regex, `${openingComment}\n${formattedPosts}\n${closingComment}`);
+	core.debug('New readme content');
+	core.debug(newReadmeContent);
 
-	// Add one since the content needs to be inserted just after the initial comment
-	startIdx++;
-	contentLines.forEach((line, idx) => readmeContent.splice(startIdx + idx, 0, line));
+	fs.writeFileSync(readmeFile, newReadmeContent);
 
-	// Update README
-	fs.writeFileSync(readmeFile, readmeContent.join('\n'));
-
-	// Commit to the remote repository
 	try {
 		await commitFile(options);
 	} catch (err) {
@@ -4232,23 +4228,27 @@ async function replaceReadmePosts(posts, options) {
 	}
 }
 
+function assertCommentExists(comment, readmeContent) {
+	if (!readmeContent.includes(comment)) {
+		core.setFailed(`Couldn't find the ${comment} comment. Exiting!`);
+	}
+}
+
 function formatPosts(posts) {
-	return `
-    <table>
-      ${posts.map((post) => {
-				return `
-        <tr>
-          <td><img src="${post.coverImage}" width="500" height="auto" /></td>
-          <td>
-            <sup>${post.dateAdded}</sup><br />
-            <b>${post.title}</b>
-            <p>${post.brief}</p>
-          </td>
-        </tr>
-        `;
-			})}
-    </table>
-  `;
+	return `<table>
+	${posts
+		.map(
+			(post) => `<tr>
+			<td><img src="${post.coverImage.url}" width="500" height="auto" /></td>
+			<td>
+				<sup>${post.publishedAt}</sup><br />
+				<b>${post.title}</b>
+				<p>${post.brief.replaceAll('\n', ' ')}</p>
+			</td>
+		</tr>`,
+		)
+		.join('\n')}
+</table>`;
 }
 
 /**

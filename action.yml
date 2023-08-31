@@ -1,10 +1,10 @@
 ---
 name: Latest Hashnode Posts
-description: Updates your README with the latest posts from your Hashnode user.
+description: Updates your README with the latest posts one of your Hashnode publications.
 author: JannikWempe
 inputs:
-  HASHNODE_ACCESS_TOKEN:
-    description: The personal access token of your Hashnode user.
+  HASHNODE_PUBLICATION_ID:
+    description: The id of the publication to get the latest posts from.
     required: true
   GITHUB_TOKEN:
     description: Secret GitHub API token used to make API requests or git authentication.
