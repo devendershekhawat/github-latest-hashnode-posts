@@ -4108,7 +4108,7 @@ var __webpack_exports__ = {};
 (() => {
 const fs = __nccwpck_require__(147);
 const core = __nccwpck_require__(733);
-const exec = __nccwpck_require__(757);
+const { exec } = __nccwpck_require__(757);
 const http = __nccwpck_require__(284);
 
 const HASHNODE_GQL_ENDPOINT = 'https://gql.hashnode.com';
