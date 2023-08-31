@@ -1,6 +1,6 @@
 const fs = require('fs');
 const core = require('@actions/core');
-const exec = require('@actions/exec');
+const { exec } = require('@actions/exec');
 const http = require('@actions/http-client');
 
 const HASHNODE_GQL_ENDPOINT = 'https://gql.hashnode.com';
