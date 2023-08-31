@@ -1,0 +1,38 @@
+---
+name: Latest Hashnode Posts
+description: Updates your README with the latest posts from your Hashnode user.
+author: JannikWempe
+inputs:
+  HASHNODE_ACCESS_TOKEN:
+    description: The personal access token of your Hashnode user.
+    required: true
+  GITHUB_TOKEN:
+    description: Secret GitHub API token used to make API requests or git authentication.
+    default: ${{ github.token }}
+    required: false
+  README_FILE:
+    description: The path to the README file that should be updated.
+    default: ./README.md
+    required: false
+  OPENING_COMMENT:
+    description: The comment that indicates the start of the section that should be updated.
+    default: <!-- HASHNODE_POSTS:START -->
+    required: false
+  CLOSING_COMMENT:
+    description: The comment that indicates the end of the section that should be updated.
+    default: <!-- HASHNODE_POSTS:END -->
+    required: false
+  MAX_POSTS:
+    description: The number of posts that should be displayed.
+    default: '5'
+    required: false
+  COMMIT_MESSAGE:
+    description: Commit message for the update commit.
+    required: false
+    default: 'chore(docs): update recent hashnode posts'
+runs:
+  using: node20
+  main: dist/index.js
+branding:
+  icon: activity
+  color: blue
