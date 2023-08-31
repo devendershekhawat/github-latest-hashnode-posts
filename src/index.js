@@ -35,9 +35,9 @@ async function getLatestHashnodePosts(options) {
         me {
           id
           publications(first: 50) {
-            id
             edges {
               node {
+                id
                 posts(page: 0, perPage: ${maxPosts}) {
                   id
                   title
