@@ -38,7 +38,7 @@ async function getLatestHashnodePosts(options) {
             edges {
               node {
                 id
-                posts(page: 0, perPage: ${maxPosts}) {
+                posts(first: $first) {
                   id
                   title
                   slug
