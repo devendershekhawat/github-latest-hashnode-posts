@@ -4244,11 +4244,12 @@ async function replaceReadmePosts(posts, options) {
 async function commitFile(options) {
 	const { readmeFile, commitMessage } = options;
 
-	await exec('git', ['config', '--global', 'user.name', 'GitHub Action Latest Hashnode Posts'], false);
-	await exec('git', ['add', readmeFile], false);
-	await exec('git', ['pull'], false);
-	await exec('git', ['commit', '-m', commitMessage], false);
-	await exec('git', ['push'], true);
+	await exec('git', ['config', '--global', 'user.name', 'GitHub Action Latest Hashnode Posts']);
+	await exec('git', ['config', '--global', 'pull.ff', 'true']);
+	await exec('git', ['add', readmeFile]);
+	await exec('git', ['pull']);
+	await exec('git', ['commit', '-m', commitMessage]);
+	await exec('git', ['push']);
 }
 
 async function run() {
