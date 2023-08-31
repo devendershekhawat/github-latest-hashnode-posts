@@ -1,3 +1,4 @@
+const fs = require('fs');
 const core = require('@actions/core');
 const exec = require('@actions/exec');
 const http = require('@actions/http-client');
