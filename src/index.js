@@ -3,8 +3,8 @@ const core = require('@actions/core');
 const { exec } = require('@actions/exec');
 const http = require('@actions/http-client');
 
-const HASHNODE_GQL_ENDPOINT = 'https://gql.hashnode.com';
 
+const DEFAULT_HASHNODE_GQL_ENDPOINT = 'https://gql.hashnode.com';
 const DEFAULT_README_FILE = './README.md';
 const DEFAULT_OPENING_COMMENT = `<!-- HASHNODE_POSTS:START -->`;
 const DEFAULT_CLOSING_COMMENT = `<!-- HASHNODE_POSTS:END -->`;
@@ -21,6 +21,8 @@ function getInputs() {
 
 	return {
 		publicationId,
+		// TODO: this is for testing on other environments; remove this
+		hashnodeGqlEndpoint: core.getInput('HASHNODE_GQL_ENDPOINT') || DEFAULT_HASHNODE_GQL_ENDPOINT,
 		gitHubToken: core.getInput('GITHUB_TOKEN'),
 		readmeFile: core.getInput('README_FILE') || DEFAULT_README_FILE,
 		openingComment: core.getInput('OPENING_COMMENT') || DEFAULT_OPENING_COMMENT,
@@ -31,10 +33,10 @@ function getInputs() {
 }
 
 async function getLatestHashnodePosts(options) {
-	const { publicationId, maxPosts } = options;
+	const { hashnodeGqlEndpoint, publicationId, maxPosts } = options;
 	core.info(`Fetching latest ${maxPosts} posts from Hashnode...`);
 	const response = await httpClient.post(
-		HASHNODE_GQL_ENDPOINT,
+		hashnodeGqlEndpoint,
 		JSON.stringify({
 			query: `#graphql
 				query LatestPosts($id: ObjectId!, $first: Int!) {
