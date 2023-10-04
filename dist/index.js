@@ -4111,8 +4111,8 @@ const core = __nccwpck_require__(733);
 const { exec } = __nccwpck_require__(757);
 const http = __nccwpck_require__(284);
 
-const HASHNODE_GQL_ENDPOINT = 'https://gql.hashnode.com';
 
+const DEFAULT_HASHNODE_GQL_ENDPOINT = 'https://gql.hashnode.com';
 const DEFAULT_README_FILE = './README.md';
 const DEFAULT_OPENING_COMMENT = `<!-- HASHNODE_POSTS:START -->`;
 const DEFAULT_CLOSING_COMMENT = `<!-- HASHNODE_POSTS:END -->`;
@@ -4129,6 +4129,8 @@ function getInputs() {
 
 	return {
 		publicationId,
+		// TODO: this is for testing on other environments; remove this
+		hashnodeGqlEndpoint: core.getInput('HASHNODE_GQL_ENDPOINT') || DEFAULT_HASHNODE_GQL_ENDPOINT,
 		gitHubToken: core.getInput('GITHUB_TOKEN'),
 		readmeFile: core.getInput('README_FILE') || DEFAULT_README_FILE,
 		openingComment: core.getInput('OPENING_COMMENT') || DEFAULT_OPENING_COMMENT,
@@ -4139,10 +4141,10 @@ function getInputs() {
 }
 
 async function getLatestHashnodePosts(options) {
-	const { publicationId, maxPosts } = options;
+	const { hashnodeGqlEndpoint, publicationId, maxPosts } = options;
 	core.info(`Fetching latest ${maxPosts} posts from Hashnode...`);
 	const response = await httpClient.post(
-		HASHNODE_GQL_ENDPOINT,
+		hashnodeGqlEndpoint,
 		JSON.stringify({
 			query: `#graphql
 				query LatestPosts($id: ObjectId!, $first: Int!) {
@@ -4237,8 +4239,8 @@ function assertCommentExists(comment, readmeContent) {
 function formatPosts(posts) {
 	return `<table>
 	${posts
-		.map(
-			(post) => `<tr>
+			.map(
+				(post) => `<tr>
 			<td><img src="${post.coverImage.url}" width="500" height="auto" /></td>
 			<td>
 				<sup>${post.publishedAt}</sup><br />
@@ -4246,8 +4248,8 @@ function formatPosts(posts) {
 				<p>${post.brief.replaceAll('\n', ' ')}</p>
 			</td>
 		</tr>`,
-		)
-		.join('\n')}
+			)
+			.join('\n')}
 </table>`;
 }
 
@@ -4263,8 +4265,13 @@ async function commitFile(options) {
 	await exec('git', ['config', '--global', 'pull.ff', 'true']);
 	await exec('git', ['add', readmeFile]);
 	await exec('git', ['pull']);
-	await exec('git', ['commit', '-m', commitMessage]);
-	await exec('git', ['push']);
+	try {
+		await exec('git', ['commit', '-m', commitMessage]);
+		await exec('git', ['push']);
+	} catch (error) {
+		core.debug("Error while committing:", error.message)
+		core.warning('No changes to commit');
+	}
 }
 
 async function run() {
