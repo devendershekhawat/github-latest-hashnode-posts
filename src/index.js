@@ -129,8 +129,8 @@ function assertCommentExists(comment, readmeContent) {
 function formatPosts(posts) {
 	return `<table>
 	${posts
-		.map(
-			(post) => `<tr>
+			.map(
+				(post) => `<tr>
 			<td><img src="${post.coverImage.url}" width="500" height="auto" /></td>
 			<td>
 				<sup>${post.publishedAt}</sup><br />
@@ -138,8 +138,8 @@ function formatPosts(posts) {
 				<p>${post.brief.replaceAll('\n', ' ')}</p>
 			</td>
 		</tr>`,
-		)
-		.join('\n')}
+			)
+			.join('\n')}
 </table>`;
 }
 
@@ -155,8 +155,13 @@ async function commitFile(options) {
 	await exec('git', ['config', '--global', 'pull.ff', 'true']);
 	await exec('git', ['add', readmeFile]);
 	await exec('git', ['pull']);
-	await exec('git', ['commit', '-m', commitMessage]);
-	await exec('git', ['push']);
+	try {
+		await exec('git', ['commit', '-m', commitMessage]);
+		await exec('git', ['push']);
+	} catch (error) {
+		core.debug("Error while committing:", error.message)
+		core.warning('No changes to commit');
+	}
 }
 
 async function run() {
