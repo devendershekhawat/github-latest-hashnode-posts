@@ -51,6 +51,7 @@ async function getLatestHashnodePosts(options) {
 									title
 									brief
 									publishedAt
+									url
 									coverImage {
 										url
 									}
@@ -138,7 +139,7 @@ function formatPosts(posts) {
 			<td><img src="${post.coverImage.url}" width="500" height="auto" /></td>
 			<td>
 				<sup>${new Date(post.publishedAt).toDateString()}</sup><br />
-				<b>${post.title}</b>
+				<b><a href="${post.url}" target="_blank">${post.title}</a></b>
 				<p>${post.brief.replaceAll('\n', ' ')}</p>
 			</td>
 		</tr>`,
