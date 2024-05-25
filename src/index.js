@@ -19,6 +19,8 @@ function getInputs() {
 		core.setFailed('HASHNODE_PUBLICATION_ID is required');
 	}
 
+	core.info(`token: ${core.getInput('GITHUB_TOKEN')}`);
+
 	return {
 		publicationId,
 		// TODO: this is for testing on other environments; remove this
