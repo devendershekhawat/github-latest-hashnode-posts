@@ -154,6 +154,7 @@ async function commitFile(options) {
 	const { readmeFile, commitMessage } = options;
 
 	await exec('git', ['config', '--global', 'user.name', 'GitHub Action Latest Hashnode Posts']);
+	await exec('git', ['config', '--global', 'user.email', 'devender.shekhawat0296@gmail.com']);
 	await exec('git', ['config', '--global', 'pull.ff', 'true']);
 	await exec('git', ['add', readmeFile]);
 	await exec('git', ['pull']);
