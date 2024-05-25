@@ -4239,14 +4239,13 @@ function assertCommentExists(comment, readmeContent) {
 }
 
 function formatPosts(posts) {
-	const formattedDate = new Date(post.publishedAt).toDateString();
 	return `<table>
 	${posts
 			.map(
 				(post) => `<tr>
 			<td><img src="${post.coverImage.url}" width="500" height="auto" /></td>
 			<td>
-				<sup>${formattedDate}</sup><br />
+				<sup>${new Date(post.publishedAt).toDateString()}</sup><br />
 				<b>${post.title}</b>
 				<p>${post.brief.replaceAll('\n', ' ')}</p>
 			</td>
